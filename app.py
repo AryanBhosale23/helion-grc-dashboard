@@ -449,7 +449,7 @@ with tab2:
         "Evidence","Gap Description","Remediation Action","Priority","Risk Score"
     ] if c in filtered_iso.columns]
 
-    styled = filtered_iso[display_cols].style.applymap(
+    styled = filtered_iso[display_cols].style.map(
         highlight_status, subset=["Status"] if "Status" in display_cols else []
     )
 
@@ -602,7 +602,7 @@ with tab4:
         "NIST CSF Subcategory(ies)","NIST Function(s)","Status","Notes"
     ] if c in filtered_cw.columns]
 
-    cw_styled = filtered_cw[cw_display_cols].style.applymap(
+    cw_styled = filtered_cw[cw_display_cols].style.map(
         highlight_status, subset=["Status"] if "Status" in cw_display_cols else []
     )
     st.dataframe(cw_styled, use_container_width=True, height=500)
@@ -718,7 +718,7 @@ with tab5:
         }
         return mapping.get(val, "")
 
-    risk_styled = filtered_risk[risk_display_cols].style.applymap(
+    risk_styled = filtered_risk[risk_display_cols].style.map(
         highlight_risk_level,
         subset=["Risk Level"] if "Risk Level" in risk_display_cols else []
     )
@@ -774,7 +774,7 @@ with tab6:
         "GDPR Article(s)","NIST CSF Mapping"
     ] if c in filtered_soa.columns]
 
-    soa_styled = filtered_soa[soa_display_cols].style.applymap(
+    soa_styled = filtered_soa[soa_display_cols].style.map(
         highlight_status,
         subset=["Status"] if "Status" in soa_display_cols else []
     )
@@ -1062,7 +1062,7 @@ with tab8:
         "Recommended Action"
     ] if c in filtered_gdpr.columns]
 
-    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.applymap(
+    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.map(
         highlight_gdpr_status,
         subset=["Status"] if "Status" in gdpr_display_cols else []
     )
