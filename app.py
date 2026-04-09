@@ -135,7 +135,7 @@ st.markdown("""
 # ─────────────────────────────────────────────
 
 # PASTE YOUR SHEET ID HERE
-SHEET_ID = "paste-your-sheet-id-here"
+SHEET_ID = "1aQxsJlAR1fzEx_EOZ3-2VnQfEQpkGjKXb8yRiYcwPI8"
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
