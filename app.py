@@ -135,7 +135,7 @@ st.markdown("""
 # ─────────────────────────────────────────────
 
 # PASTE YOUR SHEET ID HERE
-SHEET_ID = "1aQxsJlAR1fzEx_EOZ3-2VnQfEQpkGjKXb8yRiYcwPI8"
+SHEET_ID = "paste-your-sheet-id-here"
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
@@ -194,8 +194,11 @@ def load_all_data():
     risk     = sheet_to_df("Risk_Register")
     soa      = sheet_to_df("Statement_of_Applicability")
     gdpr     = sheet_to_df("GDPR_Regulatory_Mapping")
+    tprm_inv = sheet_to_df("TPRM_Vendor_Inventory")
+    tprm_reg = sheet_to_df("TPRM_Vendor_Risk_Register")
+    tprm_rem = sheet_to_df("TPRM_Remediation_Tracker")
 
-    return iso, nist, crosswalk, roadmap, risk, soa, gdpr
+    return iso, nist, crosswalk, roadmap, risk, soa, gdpr, tprm_inv, tprm_reg, tprm_rem
 
 
 def to_numeric(df, columns):
@@ -208,7 +211,7 @@ def to_numeric(df, columns):
 
 # ── Load ──
 with st.spinner("🔄 Connecting to Google Sheets..."):
-    iso_df, nist_df, crosswalk_df, roadmap_df, risk_df, soa_df, gdpr_df = load_all_data()
+    iso_df, nist_df, crosswalk_df, roadmap_df, risk_df, soa_df, gdpr_df, tprm_inv_df, tprm_reg_df, tprm_rem_df = load_all_data()
 
 # ── Convert numeric columns using your exact column names ──
 iso_df      = to_numeric(iso_df,  ["Risk Score"])
@@ -304,7 +307,7 @@ st.divider()
 # ─────────────────────────────────────────────
 # TABS
 # ─────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "📊 Overview",
     "📋 ISO 27001 Matrix",
     "🎯 NIST CSF Profile",
@@ -313,6 +316,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "✅ Statement of Applicability",
     "🗺️  Remediation Roadmap",
     "🇪🇺 GDPR Mapping",
+    "🏢 TPRM",
 ])
 
 # ══════════════════════════════════════════════════════════
@@ -449,7 +453,7 @@ with tab2:
         "Evidence","Gap Description","Remediation Action","Priority","Risk Score"
     ] if c in filtered_iso.columns]
 
-    styled = filtered_iso[display_cols].style.map(
+    styled = filtered_iso[display_cols].style.applymap(
         highlight_status, subset=["Status"] if "Status" in display_cols else []
     )
 
@@ -602,7 +606,7 @@ with tab4:
         "NIST CSF Subcategory(ies)","NIST Function(s)","Status","Notes"
     ] if c in filtered_cw.columns]
 
-    cw_styled = filtered_cw[cw_display_cols].style.map(
+    cw_styled = filtered_cw[cw_display_cols].style.applymap(
         highlight_status, subset=["Status"] if "Status" in cw_display_cols else []
     )
     st.dataframe(cw_styled, use_container_width=True, height=500)
@@ -718,7 +722,7 @@ with tab5:
         }
         return mapping.get(val, "")
 
-    risk_styled = filtered_risk[risk_display_cols].style.map(
+    risk_styled = filtered_risk[risk_display_cols].style.applymap(
         highlight_risk_level,
         subset=["Risk Level"] if "Risk Level" in risk_display_cols else []
     )
@@ -774,7 +778,7 @@ with tab6:
         "GDPR Article(s)","NIST CSF Mapping"
     ] if c in filtered_soa.columns]
 
-    soa_styled = filtered_soa[soa_display_cols].style.map(
+    soa_styled = filtered_soa[soa_display_cols].style.applymap(
         highlight_status,
         subset=["Status"] if "Status" in soa_display_cols else []
     )
@@ -1062,7 +1066,7 @@ with tab8:
         "Recommended Action"
     ] if c in filtered_gdpr.columns]
 
-    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.map(
+    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.applymap(
         highlight_gdpr_status,
         subset=["Status"] if "Status" in gdpr_display_cols else []
     )
@@ -1088,6 +1092,190 @@ with tab8:
                 "Article Title", "GAP vs GDPR Requirement", "Recommended Action"
             ] if c in violations.columns]
             st.dataframe(violations[violation_cols], use_container_width=True)
+
+# ══════════════════════════════════════════════════════════
+# TAB 9 ── TPRM PROGRAM
+# ══════════════════════════════════════════════════════════
+with tab9:
+    st.markdown('<p class="section-header">Third-Party Risk Management (TPRM) Program</p>', unsafe_allow_html=True)
+
+    # ── KPI row from inventory ──
+    t1, t2, t3, t4, t5 = st.columns(5)
+    total_vendors = len(tprm_inv_df) if not tprm_inv_df.empty else 0
+    critical_v = len(tprm_inv_df[tprm_inv_df["Initial Risk Tier"] == "Critical"]) if "Initial Risk Tier" in tprm_inv_df.columns else 0
+    high_v = len(tprm_inv_df[tprm_inv_df["Initial Risk Tier"] == "High"]) if "Initial Risk Tier" in tprm_inv_df.columns else 0
+    dpa_violations = len(tprm_inv_df[tprm_inv_df["DPA in Place"] == "No"]) if "DPA in Place" in tprm_inv_df.columns else 0
+    assessed = len(tprm_inv_df[tprm_inv_df["Assessment Status"] == "Completed"]) if "Assessment Status" in tprm_inv_df.columns else 0
+
+    t1.metric("Total Vendors", total_vendors)
+    t2.metric("🔴 Critical Tier", critical_v)
+    t3.metric("🟠 High Tier", high_v)
+    t4.metric("⚠️ DPA Violations", dpa_violations)
+    t5.metric("✅ Assessments Complete", assessed)
+
+    st.divider()
+
+    col_tl, col_tr = st.columns(2)
+
+    with col_tl:
+        st.markdown('<p class="section-header">Vendor Distribution by Risk Tier</p>', unsafe_allow_html=True)
+        if "Initial Risk Tier" in tprm_inv_df.columns:
+            tier_counts = tprm_inv_df["Initial Risk Tier"].value_counts().reset_index()
+            tier_counts.columns = ["Tier", "Count"]
+            tier_color_map = {
+                "Critical": "#ff6b6b",
+                "High":     "#ffd700",
+                "Medium":   "#64ffda",
+                "Low":      "#4a9eff",
+            }
+            fig_tier = px.bar(
+                tier_counts,
+                x="Tier", y="Count",
+                color="Tier",
+                color_discrete_map=tier_color_map,
+                template=PLOTLY_TEMPLATE,
+                title="Vendors by Risk Tier"
+            )
+            fig_tier.update_layout(showlegend=False, xaxis_title="", yaxis_title="Vendors")
+            st.plotly_chart(fig_tier, use_container_width=True)
+
+    with col_tr:
+        st.markdown('<p class="section-header">Assessment Status Overview</p>', unsafe_allow_html=True)
+        if "Assessment Status" in tprm_inv_df.columns:
+            status_counts = tprm_inv_df["Assessment Status"].value_counts().reset_index()
+            status_counts.columns = ["Status", "Count"]
+            status_color_map = {
+                "Completed":    "#64ffda",
+                "In Progress":  "#ffd700",
+                "Pending":      "#ff8c00",
+                "Not Required": "#4a5568",
+                "Overdue":      "#ff4444",
+            }
+            fig_status = px.pie(
+                status_counts,
+                values="Count", names="Status",
+                hole=0.55,
+                color="Status",
+                color_discrete_map=status_color_map,
+                template=PLOTLY_TEMPLATE
+            )
+            fig_status.update_traces(textposition="inside", textinfo="percent+label")
+            fig_status.update_layout(showlegend=False, margin=dict(t=20,b=20,l=20,r=20))
+            st.plotly_chart(fig_status, use_container_width=True)
+
+    st.divider()
+
+    # ── Vendor Inventory table ──
+    st.markdown('<p class="section-header">Vendor Inventory</p>', unsafe_allow_html=True)
+
+    ti1, ti2 = st.columns(2)
+    with ti1:
+        tier_filter_opts = tprm_inv_df["Initial Risk Tier"].dropna().unique().tolist() if "Initial Risk Tier" in tprm_inv_df.columns else []
+        tier_filter_tprm = st.multiselect("Filter by Tier", options=tier_filter_opts, default=tier_filter_opts, key="tprm_tier")
+    with ti2:
+        astatus_opts = tprm_inv_df["Assessment Status"].dropna().unique().tolist() if "Assessment Status" in tprm_inv_df.columns else []
+        astatus_filter = st.multiselect("Filter by Assessment Status", options=astatus_opts, default=astatus_opts, key="tprm_astatus")
+
+    filtered_inv = tprm_inv_df.copy()
+    if tier_filter_tprm and "Initial Risk Tier" in filtered_inv.columns:
+        filtered_inv = filtered_inv[filtered_inv["Initial Risk Tier"].isin(tier_filter_tprm)]
+    if astatus_filter and "Assessment Status" in filtered_inv.columns:
+        filtered_inv = filtered_inv[filtered_inv["Assessment Status"].isin(astatus_filter)]
+
+    def highlight_tier(val):
+        colors = {
+            "Critical": "background-color:#3C3489; color:#EEEDFE",
+            "High":     "background-color:#BA7517; color:#FAEEDA",
+            "Medium":   "background-color:#3B6D11; color:#EAF3DE",
+            "Low":      "background-color:#185FA5; color:#E6F1FB",
+        }
+        return colors.get(val, "")
+
+    def highlight_dpa(val):
+        if val == "Yes": return "background-color:#0d3d2e; color:#64ffda"
+        if val in ["No", "No — VIOLATION"]: return "background-color:#3d0d0d; color:#ff6b6b"
+        return ""
+
+    inv_cols = [c for c in [
+        "Vendor ID","Vendor Name","Service Category","Initial Risk Tier",
+        "Personal Data Processed","Service Criticality","Assessment Status",
+        "Last Assessment Date","Next Assessment Due","DPA in Place","Notes"
+    ] if c in filtered_inv.columns]
+
+    if inv_cols:
+        styled_inv = filtered_inv[inv_cols].style
+        if "Initial Risk Tier" in inv_cols:
+            styled_inv = styled_inv.applymap(highlight_tier, subset=["Initial Risk Tier"])
+        if "DPA in Place" in inv_cols:
+            styled_inv = styled_inv.applymap(highlight_dpa, subset=["DPA in Place"])
+        st.dataframe(styled_inv, use_container_width=True, height=400)
+    st.caption(f"Showing {len(filtered_inv)} of {len(tprm_inv_df)} vendors")
+
+    st.divider()
+
+    # ── Vendor Risk Register ──
+    st.markdown('<p class="section-header">Vendor Risk Register — Assessed Vendors</p>', unsafe_allow_html=True)
+
+    if not tprm_reg_df.empty:
+        reg_cols = [c for c in [
+            "Vendor ID","Vendor Name","Service Category","Risk Tier",
+            "Assessment Date","Score %","Risk Rating","Key Findings",
+            "Required Remediations","Remediation Deadline","Remediation Status",
+            "Next Assessment Due","DPA in Place","Assessment Status"
+        ] if c in tprm_reg_df.columns]
+
+        if reg_cols:
+            st.dataframe(tprm_reg_df[reg_cols], use_container_width=True, height=380)
+
+    st.divider()
+
+    # ── Remediation Tracker ──
+    st.markdown('<p class="section-header">Remediation Tracker</p>', unsafe_allow_html=True)
+
+    if not tprm_rem_df.empty:
+        rem1, rem2 = st.columns(2)
+        with rem1:
+            rem_vendor_opts = tprm_rem_df["Vendor Name"].dropna().unique().tolist() if "Vendor Name" in tprm_rem_df.columns else []
+            rem_vendor_filter = st.multiselect("Filter by Vendor", options=rem_vendor_opts, default=rem_vendor_opts, key="rem_vendor")
+        with rem2:
+            rem_status_opts = tprm_rem_df["Status"].dropna().unique().tolist() if "Status" in tprm_rem_df.columns else []
+            rem_status_filter = st.multiselect("Filter by Status", options=rem_status_opts, default=rem_status_opts, key="rem_status")
+
+        filtered_rem = tprm_rem_df.copy()
+        if rem_vendor_filter and "Vendor Name" in filtered_rem.columns:
+            filtered_rem = filtered_rem[filtered_rem["Vendor Name"].isin(rem_vendor_filter)]
+        if rem_status_filter and "Status" in filtered_rem.columns:
+            filtered_rem = filtered_rem[filtered_rem["Status"].isin(rem_status_filter)]
+
+        rem_cols = [c for c in [
+            "Vendor ID","Vendor Name","Risk Tier","Priority",
+            "Remediation Required","Owner","Deadline","Status",
+            "Evidence of Completion","Notes"
+        ] if c in filtered_rem.columns]
+
+        if rem_cols:
+            def highlight_priority(val):
+                if "P1" in str(val): return "background-color:#3d0d0d; color:#ff6b6b"
+                if "P2" in str(val): return "background-color:#3d2e0d; color:#ffd700"
+                if "P3" in str(val): return "background-color:#0d1f3d; color:#4a9eff"
+                return ""
+
+            def highlight_rem_status(val):
+                colors = {
+                    "Completed":    "background-color:#0d3d2e; color:#64ffda",
+                    "In Progress":  "background-color:#3d2e0d; color:#ffd700",
+                    "Not Started":  "background-color:#3d0d0d; color:#ff6b6b",
+                    "Pending":      "background-color:#3d2e0d; color:#ffd700",
+                }
+                return colors.get(val, "")
+
+            rem_styled = filtered_rem[rem_cols].style
+            if "Priority" in rem_cols:
+                rem_styled = rem_styled.applymap(highlight_priority, subset=["Priority"])
+            if "Status" in rem_cols:
+                rem_styled = rem_styled.applymap(highlight_rem_status, subset=["Status"])
+            st.dataframe(rem_styled, use_container_width=True, height=420)
+            st.caption(f"Showing {len(filtered_rem)} of {len(tprm_rem_df)} remediation actions")
 
 # ─────────────────────────────────────────────
 # FOOTER
