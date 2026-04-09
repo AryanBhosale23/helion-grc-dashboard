@@ -195,7 +195,7 @@ def load_all_data():
     soa      = sheet_to_df("Statement_of_Applicability")
     gdpr     = sheet_to_df("GDPR_Regulatory_Mapping")
     tprm_inv = sheet_to_df("TPRM_Vendor_Inventory")
-    tprm_reg = sheet_to_df("TPRM_Vendor_Risk_Register, 2")
+    tprm_reg = sheet_to_df("TPRM_Vendor_Risk_Register")
     tprm_rem = sheet_to_df("TPRM_Remediation_Tracker")
 
     return iso, nist, crosswalk, roadmap, risk, soa, gdpr, tprm_inv, tprm_reg, tprm_rem
