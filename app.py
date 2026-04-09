@@ -453,7 +453,7 @@ with tab2:
         "Evidence","Gap Description","Remediation Action","Priority","Risk Score"
     ] if c in filtered_iso.columns]
 
-    styled = filtered_iso[display_cols].style.applymap(
+    styled = filtered_iso[display_cols].style.map(
         highlight_status, subset=["Status"] if "Status" in display_cols else []
     )
 
@@ -606,7 +606,7 @@ with tab4:
         "NIST CSF Subcategory(ies)","NIST Function(s)","Status","Notes"
     ] if c in filtered_cw.columns]
 
-    cw_styled = filtered_cw[cw_display_cols].style.applymap(
+    cw_styled = filtered_cw[cw_display_cols].style.map(
         highlight_status, subset=["Status"] if "Status" in cw_display_cols else []
     )
     st.dataframe(cw_styled, use_container_width=True, height=500)
@@ -722,7 +722,7 @@ with tab5:
         }
         return mapping.get(val, "")
 
-    risk_styled = filtered_risk[risk_display_cols].style.applymap(
+    risk_styled = filtered_risk[risk_display_cols].style.map(
         highlight_risk_level,
         subset=["Risk Level"] if "Risk Level" in risk_display_cols else []
     )
@@ -778,7 +778,7 @@ with tab6:
         "GDPR Article(s)","NIST CSF Mapping"
     ] if c in filtered_soa.columns]
 
-    soa_styled = filtered_soa[soa_display_cols].style.applymap(
+    soa_styled = filtered_soa[soa_display_cols].style.map(
         highlight_status,
         subset=["Status"] if "Status" in soa_display_cols else []
     )
@@ -1066,7 +1066,7 @@ with tab8:
         "Recommended Action"
     ] if c in filtered_gdpr.columns]
 
-    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.applymap(
+    gdpr_styled = filtered_gdpr[gdpr_display_cols].style.map(
         highlight_gdpr_status,
         subset=["Status"] if "Status" in gdpr_display_cols else []
     )
@@ -1205,9 +1205,9 @@ with tab9:
     if inv_cols:
         styled_inv = filtered_inv[inv_cols].style
         if "Initial Risk Tier" in inv_cols:
-            styled_inv = styled_inv.applymap(highlight_tier, subset=["Initial Risk Tier"])
+            styled_inv = styled_inv.map(highlight_tier, subset=["Initial Risk Tier"])
         if "DPA in Place" in inv_cols:
-            styled_inv = styled_inv.applymap(highlight_dpa, subset=["DPA in Place"])
+            styled_inv = styled_inv.map(highlight_dpa, subset=["DPA in Place"])
         st.dataframe(styled_inv, use_container_width=True, height=400)
     st.caption(f"Showing {len(filtered_inv)} of {len(tprm_inv_df)} vendors")
 
@@ -1271,9 +1271,9 @@ with tab9:
 
             rem_styled = filtered_rem[rem_cols].style
             if "Priority" in rem_cols:
-                rem_styled = rem_styled.applymap(highlight_priority, subset=["Priority"])
+                rem_styled = rem_styled.map(highlight_priority, subset=["Priority"])
             if "Status" in rem_cols:
-                rem_styled = rem_styled.applymap(highlight_rem_status, subset=["Status"])
+                rem_styled = rem_styled.map(highlight_rem_status, subset=["Status"])
             st.dataframe(rem_styled, use_container_width=True, height=420)
             st.caption(f"Showing {len(filtered_rem)} of {len(tprm_rem_df)} remediation actions")
 
